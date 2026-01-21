@@ -152,16 +152,7 @@ public class UsbSerialPlugin implements FlutterPlugin, MethodCallHandler, EventC
         }
 
         Intent intent = new Intent(ACTION_USB_PERMISSION);
-
-        Class<?> activityThread = null;
-        try {
-            activityThread = Class.forName("android.app.ActivityThread");
-            Method method = activityThread.getDeclaredMethod("currentPackageName");
-            String appPackageName = (String) method.invoke(activityThread);
-            intent.setPackage(appPackageName);
-        } catch (Exception e) {
-            // Not too important to throw anything
-        }
+        intent.setPackage(cw.getPackageName());
 
         PendingIntent permissionIntent = PendingIntent.getBroadcast(cw, 0, intent, flags);
 
@@ -192,6 +183,13 @@ public class UsbSerialPlugin implements FlutterPlugin, MethodCallHandler, EventC
         };
 
         try {
+            if (!m_Manager.hasPermission(device)) {
+                if (allowAcquirePermission) {
+                    acquirePermissions(device, cb);
+                    return;
+                }
+            }
+
             UsbDeviceConnection connection = m_Manager.openDevice(device);
 
             if ( connection == null && allowAcquirePermission ) {
