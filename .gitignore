@@ -13,6 +13,7 @@ local.properties
 /*/out
 /*/*/build
 /*/*/production
+example/android/app/.cxx/
 
 # User-specific configurations
 **/.idea/caches/

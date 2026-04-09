@@ -61,17 +61,23 @@ class _MyAppState extends State<MyApp> {
 
     await _port!.setDTR(true);
     await _port!.setRTS(true);
+    await _port!.setFlowControl(0);
     await _port!.setPortParameters(115200, UsbPort.DATABITS_8, UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
 
-    _transaction = Transaction.stringTerminated(_port!.inputStream as Stream<Uint8List>, Uint8List.fromList([13, 10]));
+    // 必须以13, 10为结束符
+    // _transaction = Transaction.stringTerminated(_port!.inputStream as Stream<Uint8List>, Uint8List.fromList([13, 10]));
+    //
+    // _subscription = _transaction!.stream.listen((String line) {
+    //   setState(() {
+    //     _serialData.add(Text(line));
+    //     if (_serialData.length > 20) {
+    //       _serialData.removeAt(0);
+    //     }
+    //   });
+    // });
 
-    _subscription = _transaction!.stream.listen((String line) {
-      setState(() {
-        _serialData.add(Text(line));
-        if (_serialData.length > 20) {
-          _serialData.removeAt(0);
-        }
-      });
+    _port!.inputStream?.listen((Uint8List event) {
+      print("接收到串口数据: $event");
     });
 
     setState(() {
@@ -159,6 +165,19 @@ class _MyAppState extends State<MyApp> {
                     _textController.text = "";
                   },
           ),
+        ),
+        ElevatedButton(
+          child: Text("Send"),
+          onPressed: _port == null
+              ? null
+              : () async {
+                  if (_port == null) {
+                    return;
+                  }
+                  var writeData = Uint8List.fromList([170, 85, 3, 0, 1, 3, 3, 82, 182, 119, 238]);
+                  print("写入数据: $writeData");
+                  await _port!.write(writeData);
+                },
         ),
         Text("Result Data", style: Theme.of(context).textTheme.titleLarge),
         ..._serialData,
